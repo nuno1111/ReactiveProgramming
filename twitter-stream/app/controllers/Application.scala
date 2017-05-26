@@ -7,6 +7,7 @@ import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.oauth.{RequestToken, ConsumerKey}
 import play.api.libs.ws.WS
+import play.api.libs.ws.WSResponse
 import play.api.libs.oauth.OAuthCalculator
 import play.api.libs.iteratee.Iteratee
 import play.extras.iteratees.JsonIteratees
@@ -27,6 +28,46 @@ class Application extends Controller {
   def tweets = WebSocket.acceptWithActor[String, JsValue] { request =>
     out => TwitterStreamer.props(out);
   }
+  
+  def test = Action.async {
+    val response: Future[WSResponse] = WS.url("http://playframework.com").get();
+     
+    val siteOnline: Future[Boolean] = response.map { r =>
+      r.status == 200
+    }
+    
+    siteOnline.foreach { online =>
+      if (online) {
+        println("site is up")
+      } else {
+        println("site is down")
+      }
+    }
+    
+    siteOnline.map { status =>
+      if (status) {
+        Ok("site is up")
+      } else {
+        Ok("site is down")
+      }
+    }
+    
+  }
+  
+  def test2 = Action.async {
+    val response: Future[WSResponse] = WS.url("http://playframework.com").get()
+    
+    val siteAvailable: Future[Option[Boolean]] = response.map { r => 
+      Some(r.status == 200)
+    } recover {
+      case ce: java.net.ConnectException => None
+    }
+    
+    siteAvailable.map { option =>
+      Ok(option.toString)
+    }
+  }
+  
 /*
   def tweets = Action.async {
     val loggingIteratee = Iteratee.foreach[JsObject] { value =>
