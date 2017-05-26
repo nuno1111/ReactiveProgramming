@@ -31,7 +31,7 @@ class Application extends Controller {
   
   def test = Action.async {
     val response: Future[WSResponse] = WS.url("http://playframework.com").get();
-     
+    
     val siteOnline: Future[Boolean] = response.map { r =>
       r.status == 200
     }
